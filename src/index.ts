@@ -1,16 +1,20 @@
 
 // server.js
-const express = require('express');
-const multer = require('multer');
-const cors = require('cors');
+import express, { json } from 'express';
+import multer, { memoryStorage } from 'multer';
+import cors from 'cors';
 const app = express();
 const PORT = 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(json());
 
-const storage = multer.memoryStorage();
+const storage = memoryStorage();
 const upload = multer({ storage });
+
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
 
 app.post('/upload', upload.array('files'), (req, res) => {
   // TODO: Parse Excel and store to DB
