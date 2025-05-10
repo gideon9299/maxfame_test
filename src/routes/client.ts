@@ -1,7 +1,21 @@
 import { Router, Request, Response } from 'express';
 import { Client } from '../models/client';
+import multer from 'multer';
+import { parse } from 'csv-parse';
+import { Readable } from 'stream';
 
 const router = Router();
+const upload = multer();
+
+interface CSVRecord {
+    clientId: string;
+    name: string;
+}
+
+interface UploadResult {
+    success: CSVRecord[];
+    failed: (CSVRecord & { reason: string })[];
+}
 
 /**
  * @swagger
@@ -226,5 +240,128 @@ router.put('/:id', clientController.update);
  *         description: Client not found
  */
 router.delete('/:id', clientController.delete);
+
+/**
+ * @swagger
+ * /api/clients/upload-csv:
+ *   post:
+ *     summary: Upload standardized clients from CSV file
+ *     tags: [Clients]
+ *     consumes:
+ *       - multipart/form-data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: CSV file containing client data
+ *     responses:
+ *       200:
+ *         description: CSV processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 totalProcessed:
+ *                   type: number
+ *                 successCount:
+ *                   type: number
+ *                 failureCount:
+ *                   type: number
+ *                 success:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Client'
+ *                 failed:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       clientId:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       reason:
+ *                         type: string
+ *       400:
+ *         description: Invalid file format or content
+ */
+router.post('/upload-csv', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+    if (!req.file) {
+        res.status(400).json({ message: 'No file uploaded' });
+        return;
+    }
+
+    if (req.file.mimetype !== 'text/csv') {
+        res.status(400).json({ message: 'Please upload a CSV file' });
+        return;
+    }
+
+    const results: UploadResult = {
+        success: [],
+        failed: []
+    };
+
+    try {
+        const bufferStream = new Readable();
+        bufferStream.push(req.file.buffer);
+        bufferStream.push(null);
+
+        const parser = parse({
+            columns: true,
+            skip_empty_lines: true
+        });
+
+        const records: CSVRecord[] = [];
+        
+        for await (const record of bufferStream.pipe(parser)) {
+            records.push({
+                clientId: record.ClientID?.toString(),
+                name: record.Name
+            });
+        }
+
+        for (const record of records) {
+            try {
+                const existing = await Client.findOne({ clientId: record.clientId });
+                
+                if (existing) {
+                    await Client.findByIdAndUpdate(existing._id, record);
+                } else {
+                    await Client.create(record);
+                }
+                
+                results.success.push(record);
+            } catch (error: any) {
+                const failedRecord: CSVRecord & { reason: string } = {
+                    ...record,
+                    reason: error.message || 'Unknown error occurred'
+                };
+                results.failed.push(failedRecord);
+            }
+        }
+
+        res.json({
+            message: 'CSV processed successfully',
+            totalProcessed: records.length,
+            successCount: results.success.length,
+            failureCount: results.failed.length,
+            ...results
+        });
+    } catch (error: any) {
+        res.status(400).json({
+            message: 'Error processing CSV file',
+            error: error.message
+        });
+    }
+});
 
 export default router;

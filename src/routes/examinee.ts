@@ -1,7 +1,21 @@
 import { Router, Request, Response } from 'express';
 import { Examinee } from '../models/examinee';
+import multer from 'multer';
+import { parse } from 'csv-parse';
+import { Readable } from 'stream';
 
 const router = Router();
+const upload = multer();
+
+interface CSVRecord {
+    examineeId: string;
+    name: string;
+}
+
+interface UploadResult {
+    success: CSVRecord[];
+    failed: (CSVRecord & { reason: string })[];
+}
 
 /**
  * @swagger
@@ -36,6 +50,32 @@ const router = Router();
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *     BulkUploadResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: Status message
+ *         success:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               examineeId:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *         failed:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               examineeId:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               reason:
+ *                 type: string
  */
 
 const examineeController = {
@@ -225,5 +265,110 @@ router.put('/:id', examineeController.update);
  *         description: Examinee not found
  */
 router.delete('/:id', examineeController.delete);
+
+/**
+ * @swagger
+ * /api/examinees/upload-csv:
+ *   post:
+ *     summary: Upload examinees from CSV file
+ *     tags: [Examinees]
+ *     consumes:
+ *       - multipart/form-data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: CSV file containing examinee data
+ *     responses:
+ *       200:
+ *         description: CSV processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BulkUploadResponse'
+ *       400:
+ *         description: Invalid file format or content
+ */
+router.post('/upload-csv', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+    if (!req.file) {
+        res.status(400).json({ message: 'No file uploaded' });
+        return;
+    }
+
+    if (req.file.mimetype !== 'text/csv') {
+        res.status(400).json({ message: 'Please upload a CSV file' });
+        return;
+    }
+
+    const results: UploadResult = {
+        success: [],
+        failed: []
+    };
+
+    try {
+        // Create a readable stream from the buffer
+        const bufferStream = new Readable();
+        bufferStream.push(req.file.buffer);
+        bufferStream.push(null);
+
+        // Process the CSV file
+        const parser = parse({
+            columns: true,
+            skip_empty_lines: true
+        });
+
+        const records: CSVRecord[] = [];
+        
+        // Parse CSV
+        for await (const record of bufferStream.pipe(parser)) {
+            records.push({
+                examineeId: record.ExamineeID?.toString(),
+                name: record.Name
+            });
+        }
+
+        // Process records in bulk
+        for (const record of records) {
+            try {
+                // Check if examinee already exists
+                const existing = await Examinee.findOne({ examineeId: record.examineeId });
+                
+                if (existing) {
+                    // Update existing examinee
+                    await Examinee.findByIdAndUpdate(existing._id, record);
+                } else {
+                    // Create new examinee
+                    await Examinee.create(record);
+                }
+                
+                results.success.push(record);
+            } catch (error: any) {                const failedRecord: CSVRecord & { reason: string } = {
+                    ...record,
+                    reason: error.message || 'Unknown error occurred'
+                };
+                results.failed.push(failedRecord);
+            }
+        }
+
+        res.json({
+            message: 'CSV processed successfully',
+            totalProcessed: records.length,
+            successCount: results.success.length,
+            failureCount: results.failed.length,
+            ...results
+        });
+    } catch (error: any) {
+        res.status(400).json({
+            message: 'Error processing CSV file',
+            error: error.message
+        });
+    }
+});
 
 export default router;
