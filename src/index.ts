@@ -107,6 +107,7 @@ app.post('/upload', upload.array('files'), (req, res) => {
  */
 app.post('/generate-schedule', (req, res) => {
   // TODO: Implement scheduling algorithm with constraints C1–C14
+// I really don't know what to do here. There is no context and proper explanation as to what to do.
   res.json({ message: "Sample schedule output here" });
 });
 
