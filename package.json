@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "setup": "ts-node src/scripts/setup.ts",
+    "setup:clear": "CLEAR_DATA=true ts-node src/scripts/setup.ts",
+    "setup:prod": "NODE_ENV=production ts-node src/scripts/setup.ts"
   },
   "dependencies": {
     "@types/swagger-ui-express": "^4.1.8",

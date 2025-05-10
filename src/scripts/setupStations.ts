@@ -3,7 +3,7 @@ import { Administration } from '../models/administration';
 import { Track } from '../models/track';
 import { Station } from '../models/station';
 
-const MONGODB_URI = 'mongodb://localhost:27017/maxfame-test';
+const MONGODB_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/maxfame-test';
 
 async function clearExistingData() {
     console.log('Clearing existing tracks and stations...');
