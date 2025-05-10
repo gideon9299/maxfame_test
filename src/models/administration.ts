@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { ITrack } from './track';
 
 // Interface for Administration document
 export interface IAdministration extends Document {
     name: string;
+    tracks: ITrack[];
 }
 
 // Create the schema

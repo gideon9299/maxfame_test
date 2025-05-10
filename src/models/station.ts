@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import {type IRotation } from './rotation';
 
 /**
  * @swagger
@@ -32,12 +33,19 @@ import mongoose, { Schema, Document } from 'mongoose';
 // Interface for Station document
 export interface IStation extends Document {
     name: string;
+    trackId: mongoose.Types.ObjectId;
+    rotations: IRotation[];
 }
 
 // Create the schema
 const StationSchema: Schema = new Schema({
     name: {
         type: String,
+        required: true,
+    },
+    trackId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Track',
         required: true,
     }
 }, {

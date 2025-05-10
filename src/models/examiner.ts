@@ -16,4 +16,4 @@ const ExaminerSchema: Schema = new Schema({
 });
 
 // Create and export the model
-export const Examinee = mongoose.model<IExaminer>('Examiner', ExaminerSchema);
+export const Examiner = mongoose.model<IExaminer>('Examiner', ExaminerSchema);
