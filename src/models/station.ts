@@ -1,5 +1,5 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import {type IRotation } from './rotation';
+import mongoose, { Schema, Document, ObjectId } from 'mongoose';
+import { type IRotation } from './rotation';
 
 /**
  * @swagger
@@ -9,6 +9,7 @@ import {type IRotation } from './rotation';
  *       type: object
  *       required:
  *         - name
+ *         - trackId
  *       properties:
  *         _id:
  *           type: string
@@ -16,24 +17,21 @@ import {type IRotation } from './rotation';
  *         name:
  *           type: string
  *           description: The name of the station
+ *         trackId:
+ *           type: string
+ *           description: The ID of the track this station belongs to
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: The date when the station was created
  *         updatedAt:
  *           type: string
  *           format: date-time
- *           description: The date when the station was last updated
- *       example:
- *         name: "Station 1"
- *         createdAt: "2025-05-09T10:00:00.000Z"
- *         updatedAt: "2025-05-09T10:00:00.000Z"
  */
 
 // Interface for Station document
 export interface IStation extends Document {
     name: string;
-    trackId: mongoose.Types.ObjectId;
+    trackId: ObjectId;
     rotations: IRotation[];
 }
 
