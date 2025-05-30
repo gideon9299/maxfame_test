@@ -1,40 +1,34 @@
 // server.js
-import express, { json } from 'express';
-import multer, { memoryStorage } from 'multer';
-import cors from 'cors';
-import swaggerUi from 'swagger-ui-express';
-import { specs } from './config/swagger';
-import administrationRoutes from './routes/administration';
-import trackRoutes from './routes/track';
-import stationRoutes from './routes/station';
-import examineeRoutes from './routes/examinee';
-import examinerRoutes from './routes/examiner';
-import clientRoutes from './routes/client';
-import mongoose from 'mongoose';
+import express, { json } from "express";
+import multer, { memoryStorage } from "multer";
+import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import { specs } from "./config/swagger";
+import administrationRoutes from "./routes/administration";
+import feedbackRoutes from "./routes/feedback";
+import mongoose from "mongoose";
 
 const app = express();
 const PORT = 3000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/maxfame-test';
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://localhost:27017/maxfame-test";
 
 // Middleware
 app.use(cors());
 app.use(json());
 
 // Connect to MongoDB
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+mongoose
+  .connect(MONGODB_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // Swagger UI setup
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 // Routes
-app.use('/api/administrations', administrationRoutes);
-app.use('/api/tracks', trackRoutes);
-app.use('/api/stations', stationRoutes);
-app.use('/api/examinees', examineeRoutes);
-app.use('/api/examiners', examinerRoutes);
-app.use('/api/clients', clientRoutes);
+app.use("/api/administrations", administrationRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // File upload setup
 const storage = memoryStorage();
@@ -54,8 +48,8 @@ const upload = multer({ storage });
  *               type: string
  *               example: Hello World!
  */
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+app.get("/", (req, res) => {
+  res.send("Hello World!");
 });
 
 /**
@@ -84,7 +78,7 @@ app.get('/', (req, res) => {
  *                 status:
  *                   type: string
  */
-app.post('/upload', upload.array('files'), (req, res) => {
+app.post("/upload", upload.array("files"), (req, res) => {
   // TODO: Parse Excel and store to DB
   res.json({ status: "Files received" });
 });
@@ -105,9 +99,9 @@ app.post('/upload', upload.array('files'), (req, res) => {
  *                 message:
  *                   type: string
  */
-app.post('/generate-schedule', (req, res) => {
+app.post("/generate-schedule", (req, res) => {
   // TODO: Implement scheduling algorithm with constraints C1–C14
-// I really don't know what to do here. There is no context and proper explanation as to what to do.
+  // I really don't know what to do here. There is no context and proper explanation as to what to do.
   res.json({ message: "Sample schedule output here" });
 });
 
