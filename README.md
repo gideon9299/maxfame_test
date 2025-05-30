@@ -1,16 +1,13 @@
-# Test Administration System
+# Feedback Management System
 
-A comprehensive system for managing medical test administrations, including tracks, stations, and participants (examinees, examiners, and standardized clients).
+A modern REST API system for managing feedback data with comprehensive CRUD operations and analytics.
 
 ## Features
 
-- **Administration Management**: Create and manage test administrations
-- **Track & Station Organization**: Organize tests into tracks and stations
-- **Participant Management**: 
-  - Examinees (test takers)
-  - Examiners (evaluators)
-  - Standardized Clients (actors/participants)
-- **Data Import**: Bulk upload participants via CSV files
+- **Feedback Management**: Create, read, update, and delete feedback records
+- **Rating System**: Support for multiple rating criteria with numerical scores
+- **Analytics**: Get comprehensive statistics on feedback ratings
+- **Validation**: Robust data validation using Zod schemas
 - **API Documentation**: Swagger/OpenAPI documentation
 - **Database**: MongoDB storage with Mongoose ODM
 
@@ -24,11 +21,13 @@ A comprehensive system for managing medical test administrations, including trac
 
 1. Clone the repository
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Configure environment variables in `.env`:
+
 ```env
 MONGODB_URI=mongodb://localhost:27017/maxfame-test
 ```
@@ -38,95 +37,90 @@ MONGODB_URI=mongodb://localhost:27017/maxfame-test
 ```
 ├── src/
 │   ├── config/         # Configuration files
-│   ├── controllers/    # Request handlers
 │   ├── models/        # MongoDB schemas
-│   ├── project_files/ # CSV templates and admin configurations
 │   ├── routes/        # API routes
-│   ├── scripts/       # Setup and utility scripts
 │   └── index.ts      # Application entry point
 ```
 
-## Setup
+## Usage
 
-1. **Initial Setup**: Run the setup script to initialize the database with test administrations and import participant data:
-```bash
-npm run setup        # Basic setup
-npm run setup:clear  # Clear existing data first
-npm run setup:prod   # Production environment setup
-```
+1. **Start the Development Server**:
 
-2. **Start the Server**:
 ```bash
 npm run dev    # Development mode
+```
+
+2. **Build for Production**:
+
+```bash
 npm run build  # Build for production
 npm start      # Run production build
 ```
 
 ## API Routes
 
-- `/api/administrations` - Test administration management
-- `/api/tracks` - Track management
-- `/api/stations` - Station management
-- `/api/examinees` - Examinee management
-- `/api/examiners` - Examiner management
-- `/api/clients` - Standardized client management
+- `/api/feedback` - Feedback management
+  - `GET /api/feedback` - Get all feedback
+  - `POST /api/feedback` - Create new feedback
+  - `GET /api/feedback/:id` - Get feedback by ID
+  - `PUT /api/feedback/:id` - Update feedback
+  - `DELETE /api/feedback/:id` - Delete feedback
+  - `GET /api/feedback/stats` - Get feedback statistics
 
 ## API Documentation
 
 Access the Swagger documentation at: `http://localhost:3000/api-docs`
 
-## Data Import
+## Feedback Model
 
-The system supports CSV imports for:
-- Examinees
-- Examiners
-- Standardized Clients
+Each feedback record contains:
 
-CSV templates are available in the `src/project_files` directory.
+- **subject**: The subject or topic of the feedback
+- **comment**: Detailed feedback text
+- **ratings**: Object containing numerical ratings for different criteria
+- **createdAt/updatedAt**: Automatic timestamps
 
-## Administration Structure
+Example feedback structure:
 
-Each test administration consists of:
-- Multiple tracks
-- Each track contains multiple stations
-- Stations are assigned:
-  - Examinees (test takers)
-  - Examiners (evaluators)
-  - Standardized Clients (actors)
+```json
+{
+  "subject": "Performance Review",
+  "comment": "Great job on the presentation",
+  "ratings": {
+    "communication": 4,
+    "technical_skills": 5,
+    "teamwork": 4
+  }
+}
+```
 
 ## Development
 
 1. **Run in Development Mode**:
+
 ```bash
 npm run dev
 ```
 
 2. **Build for Production**:
+
 ```bash
 npm run build
 ```
 
 3. **Check TypeScript Compilation**:
+
 ```bash
 tsc --noEmit
 ```
 
-## Database Models
+## Testing
 
-- `Administration`: Test administration sessions
-- `Track`: Groups of stations within an administration
-- `Station`: Individual test stations
-- `Examinee`: Test takers
-- `Examiner`: Test evaluators
-- `Client`: Standardized clients/actors
-- `Rotation`: Station assignments and scheduling
+Test the API endpoints using the included test file:
 
-## File Upload
-
-The system accepts:
-- CSV files for participant data
-- Excel files (XLSX) for bulk imports
-- Structured JSON for administration templates
+```bash
+npx ts-node test-feedback.ts
+```
 
 ## Contributing
 

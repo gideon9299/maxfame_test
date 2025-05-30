@@ -4,7 +4,6 @@ import multer, { memoryStorage } from "multer";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { specs } from "./config/swagger";
-import administrationRoutes from "./routes/administration";
 import feedbackRoutes from "./routes/feedback";
 import mongoose from "mongoose";
 
@@ -27,7 +26,6 @@ mongoose
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 // Routes
-app.use("/api/administrations", administrationRoutes);
 app.use("/api/feedback", feedbackRoutes);
 
 // File upload setup
